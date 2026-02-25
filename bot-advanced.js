@@ -126,6 +126,12 @@ async function formatSignalMessage(signal, currentData) {
 // 启动Bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
+// 测试命令
+bot.command('test', (ctx) => {
+    console.log('收到 /test 命令', ctx.chat.id);
+    ctx.reply('✅ Bot 正常工作！Chat ID: ' + ctx.chat.id);
+});
+
 // 处理消息
 bot.on('text', async (ctx) => {
     const chatType = ctx.chat.type;
