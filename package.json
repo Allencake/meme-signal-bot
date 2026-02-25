@@ -1,0 +1,16 @@
+{
+  "name": "meme-signal-bot",
+  "version": "1.0.0",
+  "description": "Meme币信号追踪Bot",
+  "main": "bot-simple.js",
+  "scripts": {
+    "start": "node bot-simple.js",
+    "api": "node api-simple.js",
+    "dev": "node bot-simple.js & node api-simple.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "telegraf": "^4.15.0"
+  }
+}
