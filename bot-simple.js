@@ -7,6 +7,11 @@ const DATA_DIR = path.join(__dirname, 'data');
 const SIGNALS_FILE = path.join(DATA_DIR, 'signals.json');
 const PRICES_FILE = path.join(DATA_DIR, 'prices.json');
 
+// 允许的群组ID列表（从环境变量读取）
+const ALLOWED_GROUPS = process.env.ALLOWED_GROUPS 
+    ? process.env.ALLOWED_GROUPS.split(',') 
+    : ['*']; // '*' 表示允许所有群组
+
 // 确保目录存在
 if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -107,8 +112,31 @@ function mockPriceCheck() {
 // 启动Bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
+// 处理消息（私聊 + 群组）
 bot.on('text', (ctx) => {
+    const chatType = ctx.chat.type;
+    const chatId = ctx.chat.id.toString();
     const text = ctx.message.text;
+    
+    console.log(`收到消息 | 类型: ${chatType} | 群组ID: ${chatId}`);
+    
+    // 判断是否应该处理
+    let shouldProcess = false;
+    
+    if (chatType === 'private') {
+        // 私聊消息
+        shouldProcess = true;
+    } else if (chatType === 'group' || chatType === 'supergroup') {
+        // 群组消息 - 允许所有群组
+        shouldProcess = true;
+    }
+    
+    if (!shouldProcess) {
+        console.log(`跳过消息 - 群组 ${chatId} 不在允许列表`);
+        return;
+    }
+    
+    // 解析消息
     const signal = parseMessage(text);
     
     if (signal) {
@@ -116,12 +144,17 @@ bot.on('text', (ctx) => {
         
         // 检查是否已存在
         if (signals.find(s => s.ca === signal.ca)) {
-            ctx.reply('⚠️ 该CA已存在');
+            console.log(`CA已存在: ${signal.ca}`);
+            // 只在私聊回复，群组不回复避免刷屏
+            if (chatType === 'private') {
+                ctx.reply('⚠️ 该CA已存在');
+            }
             return;
         }
         
         const newSignal = {
             ...signal,
+            chatId: chatId,
             timestamp: Math.floor(Date.now() / 1000),
             status: 'monitoring',
             milestones: {}
@@ -130,9 +163,33 @@ bot.on('text', (ctx) => {
         signals.push(newSignal);
         saveData(SIGNALS_FILE, signals);
         
-        ctx.reply(`✅ 已记录: ${signal.symbol}\nCA: ${signal.ca.slice(0, 8)}...\n开始监控...`);
+        const replyMsg = `✅ 已记录: ${signal.symbol}\nCA: ${signal.ca.slice(0, 8)}...\n开始监控...`;
+        
+        // 私聊直接回复，群组可以选择性回复
+        if (chatType === 'private') {
+            ctx.reply(replyMsg);
+        } else {
+            // 群组中可以选择不回复，或只在特定条件下回复
+            // ctx.reply(replyMsg); // 取消注释以在群组中回复
+            console.log(`群组消息已记录: ${signal.symbol}`);
+        }
+        
         console.log('新信号:', signal);
     }
+});
+
+// 处理群组加入事件
+bot.on('new_chat_members', (ctx) => {
+    const newMembers = ctx.message.new_chat_members;
+    const botInfo = ctx.botInfo;
+    
+    newMembers.forEach(member => {
+        if (member.id === botInfo.id) {
+            const chatId = ctx.chat.id.toString();
+            console.log(`Bot被加入群组: ${chatId}`);
+            ctx.reply(`✅ Meme Signal Bot 已加入\n群组ID: ${chatId}\n\n请将此ID添加到环境变量 ALLOWED_GROUPS 中`);
+        }
+    });
 });
 
 // 启动监控循环
@@ -141,6 +198,7 @@ setInterval(mockPriceCheck, 60000); // 每分钟检查
 // 启动Bot
 bot.launch();
 console.log('Bot已启动，等待消息...');
+console.log('允许的群组:', ALLOWED_GROUPS);
 
 // 优雅退出
 process.once('SIGINT', () => bot.stop('SIGINT'));
