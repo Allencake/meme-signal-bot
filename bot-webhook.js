@@ -150,7 +150,7 @@ bot.command('test', (ctx) => {
 
 // /start 命令
 bot.command('start', async (ctx) => {
-    console.log('收到 /start');
+    console.log('>>> 收到 /start 命令', ctx.chat.id);
     try {
         const chatType = ctx.chat.type;
         if (chatType === 'private') {
