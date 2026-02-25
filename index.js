@@ -87,9 +87,15 @@ app.post('/webhook', async (req, res) => {
             
             await sendMessage(chatId, welcomeText, getMainMenuKeyboard());
         }
-        // /test 命令
+        // /test 命令 - 也显示菜单
         else if (text === '/test') {
-            await sendMessage(chatId, '✅ Bot 正常工作！');
+            const welcomeText = `🚀 <b>金狗信号 Bot</b>\n\n` +
+                `🎯 自动追踪 Meme 币信号\n` +
+                `📊 实时价格监控\n` +
+                `🔔 智能涨幅提醒\n\n` +
+                `👇 选择功能:`;
+            
+            await sendMessage(chatId, welcomeText, getMainMenuKeyboard());
         }
         // /stats 命令
         else if (text === '/stats') {
