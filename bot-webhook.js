@@ -255,8 +255,13 @@ bot.on('callback_query', async (ctx) => {
     }
 });
 
-// 处理消息（CA信号）
+// 处理消息（CA信号）- 放在命令之后
 bot.on('text', async (ctx) => {
+    // 跳过命令消息
+    if (ctx.message.text.startsWith('/')) {
+        return;
+    }
+    
     const text = ctx.message.text;
     const signal = parseMessage(text);
     
