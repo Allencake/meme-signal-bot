@@ -22,8 +22,17 @@ bot.command('stats', (ctx) => {
     ctx.reply('📊 统计功能开发中...');
 });
 
-// 处理普通消息
-bot.on('text', (ctx) => {
+// 处理普通消息 - 放在命令之后，且跳过命令
+bot.on('message', (ctx) => {
+    // 只处理文本消息
+    if (!ctx.message.text) return;
+    
+    // 跳过命令
+    if (ctx.message.text.startsWith('/')) {
+        console.log('跳过命令:', ctx.message.text);
+        return;
+    }
+    
     console.log('收到消息:', ctx.message.text);
     // 只回复包含 CA 的消息
     if (ctx.message.text.includes('合约：')) {
