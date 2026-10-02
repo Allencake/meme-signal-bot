@@ -7,7 +7,8 @@
 ```bash
 cd /root/.openclaw/workspace/projects/meme-signal-bot
 npm install
-export TELEGRAM_BOT_TOKEN=8220505491:AAHYqwJPezQ0SPN3Ce_1mwUeml3JxrKQ_-8
+read -r -s -p "Telegram Bot Token: " TELEGRAM_BOT_TOKEN; echo
+export TELEGRAM_BOT_TOKEN
 node bot.js
 ```
 
@@ -33,7 +34,8 @@ cd meme-signal-bot
 npm install
 
 # 设置环境变量
-echo "TELEGRAM_BOT_TOKEN=8220505491:AAHYqwJPezQ0SPN3Ce_1mwUeml3JxrKQ_-8" > .env
+read -r -s -p "Telegram Bot Token: " TELEGRAM_BOT_TOKEN; echo
+export TELEGRAM_BOT_TOKEN
 
 # 使用PM2启动
 npm install -g pm2
@@ -66,3 +68,10 @@ const TARGET_BOT = '@你的新Bot用户名';
 - [ ] 更多时间维度统计
 - [ ] Premium会员系统
 - [ ] 告警通知（达到X倍时推送）
+## 凭据安全
+
+`YOUR_BOT_TOKEN` 只是占位符。真实 Token 必须由管理员在部署平台的私密环境变量设置中输入，或在服务器交互式终端中用上面的隐藏输入方式设置。不要放入源码、文档、聊天、命令历史或 Git。
+
+本项目读取 `process.env.TELEGRAM_BOT_TOKEN`，不会自动加载 `.env` 文件。VPS/PM2 的持久化配置位置必须以当前运行服务为准；PM2 保存进程环境时也可能保存 Token，其配置和备份应仅允许部署用户读取。
+
+如果 Token 曾公开，清理当前文件不会移除 Git 历史，也不会使旧 Token 失效。管理员必须亲自在 BotFather 撤销旧 Token，然后亲自在实际生产服务的私密配置中填入新 Token。确认配置和维护窗口后再重启现有进程，并验证机器人回复。不要另外启动一个轮询实例。
